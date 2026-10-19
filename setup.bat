@@ -1,6 +1,7 @@
 @echo off
 REM ------------------------------------------------------------------
-REM  Wallpaper Studio - one-time setup for Windows 11
+REM  Wallpaper Studio - optional source setup for Windows 11
+REM  (You do NOT need this to run the .exe from Releases!)
 REM  Requires: Python 3.10+ (https://python.org - tick "Add to PATH")
 REM ------------------------------------------------------------------
 setlocal
@@ -18,6 +19,7 @@ echo Creating virtual environment...
 echo Installing dependencies (customtkinter, pillow)...
 ".venv\Scripts\python.exe" -m pip install --upgrade pip
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
+".venv\Scripts\python.exe" -m pip install -e .
 
 echo.
 echo Done! Launch with:  run.bat

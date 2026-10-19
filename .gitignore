@@ -4,3 +4,7 @@ __pycache__/
 venv/
 .vscode/
 .idea/
+build/
+dist/
+*.spec.orig
+.pytest_cache/
