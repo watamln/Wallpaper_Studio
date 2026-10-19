@@ -3,8 +3,8 @@
 # Built automatically by .github/workflows/build.yml on every v* tag push.
 
 a = Analysis(
-    ['src/wallpaper_studio/app.py'],
-    pathex=['src'],
+    ['main.py'],
+    pathex=['.', 'src'],
     binaries=[],
     datas=[],
     hiddenimports=[

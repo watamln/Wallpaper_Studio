@@ -1,13 +1,18 @@
 name: Build Windows exe
 
-# Builds WallpaperStudio.exe with PyInstaller and publishes it to a
-# GitHub Release. Triggered manually from the Actions tab, or automatically
-# when you push a tag like v1.0.0.
+# Builds WallpaperStudio.exe with PyInstaller.
+#   * Push a tag like v1.0.0  -> build + GitHub Release with the .exe attached
+#   * Actions tab -> "Build Windows exe" -> Run workflow (manual trigger)
+#     -> build + downloadable artifact (no release)
+# Both paths are covered so the exe is always obtainable.
 
 on:
   workflow_dispatch:
   push:
-    tags: ["v*"]
+    tags: ["v*", "V*"]
+
+permissions:
+  contents: write   # required to create releases
 
 jobs:
   build-windows:
@@ -24,7 +29,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
 
-      - name: Smoke test (unit tests + import)
+      - name: Smoke test (unit tests)
         run: |
           pip install pytest
           pytest tests -q
@@ -34,18 +39,26 @@ jobs:
       - name: Build exe (PyInstaller, one-file, windowed)
         run: pyinstaller --clean --noconfirm build.spec
 
-      - name: Upload artifact (raw exe)
+      - name: Verify exe exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist/WallpaperStudio.exe)) {
+            Write-Error "dist/WallpaperStudio.exe was not produced"; exit 1
+          }
+          Get-Item dist/WallpaperStudio.exe | Select-Object Name, Length
+
+      - name: Upload artifact (raw exe, always)
         uses: actions/upload-artifact@v4
         with:
           name: WallpaperStudio-exe
           path: dist/WallpaperStudio.exe
 
       - name: Zip for release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: Compress-Archive -Path dist/WallpaperStudio.exe -DestinationPath dist/WallpaperStudio-win-x64.zip
 
       - name: Create GitHub Release with exe attached
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
