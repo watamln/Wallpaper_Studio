@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wallpaper-studio"
+version = "1.0.0"
+description = "Android-style crop/preview wallpaper setter for Windows 11 multi-monitor setups"
+requires-python = ">=3.10"
+dependencies = ["Pillow>=10.0.0", "customtkinter>=5.2.0"]
+
+[project.scripts]
+wallpaper-studio = "wallpaper_studio.cli:main"
+wallpaper-studio-gui = "wallpaper_studio.app:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]
