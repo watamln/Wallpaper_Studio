@@ -1,0 +1,67 @@
+name: Build Windows exe
+
+# Builds WallpaperStudio.exe with PyInstaller.
+#   * Push a tag like v1.0.0  -> build + GitHub Release with the .exe attached
+#   * Actions tab -> "Build Windows exe" -> Run workflow (manual trigger)
+#     -> build + downloadable artifact (no release)
+# Both paths are covered so the exe is always obtainable.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*", "V*"]
+
+permissions:
+  contents: write   # required to create releases
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Smoke test (unit tests)
+        run: |
+          pip install pytest
+          pytest tests -q
+        env:
+          PYTHONPATH: src
+
+      - name: Build exe (PyInstaller, one-file, windowed)
+        run: pyinstaller --clean --noconfirm build.spec
+
+      - name: Verify exe exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist/WallpaperStudio.exe)) {
+            Write-Error "dist/WallpaperStudio.exe was not produced"; exit 1
+          }
+          Get-Item dist/WallpaperStudio.exe | Select-Object Name, Length
+
+      - name: Upload artifact (raw exe, always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WallpaperStudio-exe
+          path: dist/WallpaperStudio.exe
+
+      - name: Zip for release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: Compress-Archive -Path dist/WallpaperStudio.exe -DestinationPath dist/WallpaperStudio-win-x64.zip
+
+      - name: Create GitHub Release with exe attached
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/WallpaperStudio.exe
+            dist/WallpaperStudio-win-x64.zip
+          generate_release_notes: true
